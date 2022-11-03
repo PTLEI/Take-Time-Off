@@ -1,32 +1,32 @@
-// Copyright (c) 2019-present Ithpower, Inc. All Rights Reserved.
-// See LICENSE.txt for license information.
 import React from 'react';
-import PropTypes from 'prop-types';
 
 import { GanttContext } from '../context/gantt_context';
 import { ExpandProvider } from '../context/expand_context';
+import { GruopItem } from '../types';
+import { IntervalItemType } from '../types/calendar';
 
 import SidebarContainer from './sidebar_container';
 import ScrollContainer from './scroll_container';
 import GanttNode from './gantt_node';
 
 const HEADER_HEIGHT = 40;
-export default class CalendarContent extends React.PureComponent {
-  static propTypes = {
-    handleScrollRef: PropTypes.func,
-    onScroll: PropTypes.func,
-    resizingItem: PropTypes.string,
-    scrollHeight: PropTypes.number,
-  };
 
-  wrapperRef = (wrapper) => {
+type Props = {
+  handleScrollRef: (element: HTMLDivElement) => void;
+  onScroll: (scrollX: number) => void;
+  resizingItem: string;
+  scrollHeight: number;
+};
+export default class CalendarContent extends React.PureComponent<Props> {
+  wrapper: HTMLDivElement | null = null;
+  wrapperRef = (wrapper: HTMLDivElement) => {
     this.wrapper = wrapper;
   };
 
-  renderColumns = (columnWidth, intervals) => {
+  renderColumns = (columnWidth?: number, intervals?: IntervalItemType[]) => {
     return (
       <div className="content-columns">
-        {intervals.map((item) => {
+        {intervals?.map((item) => {
           let baseClassName = 'gannt-columns';
           if (item.extraClassName) {
             baseClassName = baseClassName + ' ' + item.extraClassName;
@@ -46,7 +46,12 @@ export default class CalendarContent extends React.PureComponent {
     );
   };
 
-  renderItems = (groups, calendarTimeStart, calendarTimeEnd, calendarWidth) => {
+  renderItems = (
+    groups: GruopItem[] = [],
+    calendarTimeStart: number,
+    calendarTimeEnd: number,
+    calendarWidth: number,
+  ) => {
     const unitWidth = calendarWidth / (calendarTimeEnd - calendarTimeStart);
     return (
       <div className="content-rows">
@@ -62,10 +67,8 @@ export default class CalendarContent extends React.PureComponent {
                 <GanttNode
                   key={treeId}
                   nodeId={treeId}
-                  groupId={group.id}
                   unitWidth={unitWidth}
                   isGroupTop={isGroupTop}
-                  channelRelations={group.channelRelations}
                 />
               );
             });
@@ -79,21 +82,25 @@ export default class CalendarContent extends React.PureComponent {
   render() {
     return (
       <GanttContext.Consumer>
-        {({
-          groups,
+        {(context) => {
+          if (!context) {
+            return null;
+          }
+          const {
+            groups,
 
-          sidebarWidth,
-          contentVisibleWidth,
-          calendarWidth,
-          columnWidth,
+            sidebarWidth,
+            contentVisibleWidth,
+            calendarWidth,
+            columnWidth,
 
-          calendarTimeStart,
-          calendarTimeEnd,
-          intervals,
+            calendarTimeStart,
+            calendarTimeEnd,
+            intervals,
 
-          draggingCalendar,
-          onCalendarDragging,
-        }) => {
+            draggingCalendar,
+            onCalendarDragging,
+          } = context;
           let sidebar;
           if (sidebarWidth) {
             sidebar = <SidebarContainer sidebarWidth={sidebarWidth} groups={groups} />;
